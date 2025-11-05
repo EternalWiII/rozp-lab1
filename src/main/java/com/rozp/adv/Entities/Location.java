@@ -42,7 +42,7 @@ public class Location {
     @Column(name = "longitude", precision = 11, scale = 6)
     private BigDecimal longitude;
 
-    @Column(name = "visit_order", nullable = false) // Note: The trigger handles auto-assignment in SQL
+    @Column(name = "visit_order", nullable = false)
     private Integer visitOrder;
 
     @Column(name = "arrival_date", columnDefinition = "TIMESTAMP WITH TIME ZONE")
@@ -59,6 +59,8 @@ public class Location {
 
     @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime createdAt;
+    @Version
+    private Integer version;
 
     public UUID getId() {
         return id;
@@ -161,4 +163,12 @@ public class Location {
     }
 
     public void setTravelPlanId(UUID travelPlanId) {}
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
 }
