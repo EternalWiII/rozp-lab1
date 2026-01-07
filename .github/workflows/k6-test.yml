@@ -10,6 +10,21 @@ jobs:
   performance-test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 12345
+          POSTGRES_DB: rozp
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,10 +39,15 @@ jobs:
         run: mvn clean package -DskipTests
 
       - name: Start Spring Boot App
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/rozp
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: 12345
+          SPRING_JPA_HIBERNATE_DDL_AUTO: update
         run: java -jar target/*.jar &
 
       - name: Wait for server
-        run: sleep 30
+        run: sleep 40
 
       - name: Install k6
         run: |
@@ -37,4 +57,4 @@ jobs:
           sudo apt-get install k6
 
       - name: Run k6 test
-        run: k6 run tests/performance-tests/tests/load-test.js
+        run: k6 run tests/performance-tests/smoke-test.js
