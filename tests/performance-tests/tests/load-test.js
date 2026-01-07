@@ -148,6 +148,7 @@ export default function () {
   // --------------------------------------------------
   const locationData = generateLocation();
   locationData.name = 'Smoke Test Location';
+  locationData.visit_order = 1;
   
   console.debug(`📍 Adding location to plan ${planId} with data: ${JSON.stringify(locationData)}`);
   const location = addLocation(planId, locationData);
