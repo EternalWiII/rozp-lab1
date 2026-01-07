@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -29,8 +30,10 @@ public class TravelPlanController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<TravelPlan>> getAllTravelPlans(Pageable pageable) {
-        Page<TravelPlan> travelPlans = travelPlanService.findAll(pageable);
+    public ResponseEntity<List<TravelPlan>> getAllTravelPlans(Pageable pageable) {
+        // Spring все одно обробить параметри ?page=0&size=10
+        // Але ми витягнемо з Page тільки список елементів .getContent()
+        List<TravelPlan> travelPlans = travelPlanService.findAll(pageable).getContent();
         return ResponseEntity.ok(travelPlans);
     }
 
