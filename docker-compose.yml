@@ -4,9 +4,9 @@ services:
     container_name: traveler-db
     restart: always
     environment:
-      POSTGRES_DB: traveler_db
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     command:
       - "postgres"
       - "-c"
@@ -39,9 +39,9 @@ services:
     container_name: traveler-db-replica
     restart: always
     environment:
-      POSTGRES_DB: traveler_db
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_REP_USER}
+      POSTGRES_PASSWORD: ${DB_REP_PASSWORD}
     command:
       - "postgres"
       - "-c"
@@ -72,9 +72,9 @@ services:
       db:
         condition: service_healthy
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/traveler_db
-      - SPRING_DATASOURCE_USERNAME=user
-      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_DATASOURCE_URL= ${DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JACKSON_PROPERTY_NAMING_STRATEGY=SNAKE_CASE
 
