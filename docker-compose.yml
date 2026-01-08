@@ -1,5 +1,4 @@
 services:
-  # Сервіс бази даних
   db:
     image: postgres:15
     container_name: traveler-db
@@ -8,6 +7,25 @@ services:
       POSTGRES_DB: traveler_db
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
+    command:
+      - "postgres"
+      - "-c"
+      - "listen_addresses=*"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_replication_slots=10"
+      - "-c"
+      - "max_wal_senders=10"
+      - "-c"
+      - "max_logical_replication_workers=4"
+      - "-c"
+      - "max_worker_processes=10"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d:ro
+      - ./db/replications/publisher:/docker-entrypoint-replications:ro
+      - ./db/replications/common:/docker-entrypoint-initdb.d:ro
     ports:
       - "5432:5432"
     healthcheck:
@@ -16,7 +34,35 @@ services:
       timeout: 5s
       retries: 5
 
-  # Сервіс твого Spring Boot додатка
+  db_replica:
+    image: postgres:15
+    container_name: traveler-db-replica
+    restart: always
+    environment:
+      POSTGRES_DB: traveler_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    command:
+      - "postgres"
+      - "-c"
+      - "listen_addresses=*"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_replication_slots=10"
+      - "-c"
+      - "max_wal_senders=10"
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d:ro
+      - ./db/replications/subscriber:/docker-entrypoint-replications:ro
+      - ./db/replications/common:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "55432:5432"
+    depends_on:
+      db:
+        condition: service_healthy
+
   app:
     build: .
     container_name: traveler-api
@@ -31,3 +77,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JACKSON_PROPERTY_NAMING_STRATEGY=SNAKE_CASE
+
+volumes:
+  postgres_data:
+  postgres_replica_data:
