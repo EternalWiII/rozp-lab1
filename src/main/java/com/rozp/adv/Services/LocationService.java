@@ -44,6 +44,7 @@ public class LocationService {
         newLocation.setDepartureDate(locationRequest.getDepartureDate());
         newLocation.setBudget(locationRequest.getBudget());
         newLocation.setNotes(locationRequest.getNotes());
+        newLocation.setVisitOrder(locationRequest.getVisitOrder());
         newLocation.setVersion(1);
 
         Location savedLocation = locationRepository.save(newLocation);

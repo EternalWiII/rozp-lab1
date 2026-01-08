@@ -1,5 +1,6 @@
 package com.rozp.adv.DTO;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -21,6 +22,7 @@ public class LocationRequest {
 
     // The client CAN suggest a visitOrder, but the DB trigger might override it.
     // If the client wants to re-order, they must explicitly send an order value.
+    @JsonProperty("visit_order")
     private Integer visitOrder;
 
     private OffsetDateTime arrivalDate;

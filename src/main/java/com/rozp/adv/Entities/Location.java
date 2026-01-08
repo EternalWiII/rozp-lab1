@@ -1,6 +1,7 @@
 package com.rozp.adv.Entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -43,6 +44,7 @@ public class Location {
     private BigDecimal longitude;
 
     @Column(name = "visit_order", nullable = false)
+    @JsonProperty("visit_order")
     private Integer visitOrder;
 
     @Column(name = "arrival_date", columnDefinition = "TIMESTAMP WITH TIME ZONE")
