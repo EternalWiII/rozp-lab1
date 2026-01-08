@@ -23,7 +23,7 @@ services:
       - "max_worker_processes=10"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/migrations:/docker-entrypoint-initdb.d:ro
+      - ./db/migrations:/docker-entrypoint-migrations:ro
       - ./db/replications/publisher:/docker-entrypoint-replications:ro
       - ./db/replications/common:/docker-entrypoint-initdb.d:ro
     ports:
@@ -53,9 +53,9 @@ services:
       - "-c"
       - "max_wal_senders=10"
     volumes:
-      - postgres_replica_data:/var/lib/postgresql/data
-      - ./db/migrations:/docker-entrypoint-initdb.d:ro
-      - ./db/replications/subscriber:/docker-entrypoint-replications:ro
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-migrations:ro
+      - ./db/replications/publisher:/docker-entrypoint-replications:ro
       - ./db/replications/common:/docker-entrypoint-initdb.d:ro
     ports:
       - "55432:5432"
