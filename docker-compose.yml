@@ -1,83 +1,99 @@
 services:
-  db:
+  db-template: &db-template
     image: postgres:15
-    container_name: traveler-db
     restart: always
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=db_master
+    volumes:
+      - ./db/init-shards.sh:/docker-entrypoint-initdb.d/init-shards.sh:ro
+      - ./db/migrations:/docker-entrypoint-migrations:ro
     command:
       - "postgres"
       - "-c"
-      - "listen_addresses=*"
-      - "-c"
-      - "wal_level=logical"
-      - "-c"
-      - "max_replication_slots=10"
-      - "-c"
-      - "max_wal_senders=10"
-      - "-c"
-      - "max_logical_replication_workers=4"
-      - "-c"
-      - "max_worker_processes=10"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./db/migrations:/docker-entrypoint-migrations:ro
-      - ./db/replications/publisher:/docker-entrypoint-replications:ro
-      - ./db/replications/common:/docker-entrypoint-initdb.d:ro
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d traveler_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - "max_connections=200"
 
-  db_replica:
-    image: postgres:15
-    container_name: traveler-db-replica
-    restart: always
+  postgres_00:
+    <<: *db-template
+    container_name: postgres_00
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_REP_USER}
-      POSTGRES_PASSWORD: ${DB_REP_PASSWORD}
-    command:
-      - "postgres"
-      - "-c"
-      - "listen_addresses=*"
-      - "-c"
-      - "wal_level=logical"
-      - "-c"
-      - "max_replication_slots=10"
-      - "-c"
-      - "max_wal_senders=10"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./db/migrations:/docker-entrypoint-migrations:ro
-      - ./db/replications/publisher:/docker-entrypoint-replications:ro
-      - ./db/replications/common:/docker-entrypoint-initdb.d:ro
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=db_master
+      - POSTGRES_MULTIPLE_DATABASES=db_0,db_1,db_2,db_3
     ports:
-      - "55432:5432"
-    depends_on:
-      db:
-        condition: service_healthy
+      - "5436:5432"
+    volumes:
+      - pg_data_00:/var/lib/postgresql/data
+      - ./db/init-shards.sh:/docker-entrypoint-initdb.d/init-shards.sh:ro
+
+  postgres_01:
+    <<: *db-template
+    container_name: postgres_01
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=db_master
+      - POSTGRES_MULTIPLE_DATABASES=db_4,db_5,db_6,db_7
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data_01:/var/lib/postgresql/data
+      - ./db/init-shards.sh:/docker-entrypoint-initdb.d/init-shards.sh:ro
+
+  postgres_02:
+    <<: *db-template
+    container_name: postgres_02
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=db_master
+      - POSTGRES_MULTIPLE_DATABASES=db_8,db_9,db_a,db_b
+    ports:
+      - "5434:5432"
+    volumes:
+      - pg_data_02:/var/lib/postgresql/data
+      - ./db/init-shards.sh:/docker-entrypoint-initdb.d/init-shards.sh:ro
+
+  postgres_03:
+    <<: *db-template
+    container_name: postgres_03
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=db_master
+      - POSTGRES_MULTIPLE_DATABASES=db_c,db_d,db_e,db_f
+    ports:
+      - "5435:5432"
+    volumes:
+      - pg_data_03:/var/lib/postgresql/data
+      - ./db/init-shards.sh:/docker-entrypoint-initdb.d/init-shards.sh:ro
 
   app:
     build: .
     container_name: traveler-api
     ports:
       - "8080:8080"
+    restart: on-failure
     depends_on:
-      db:
-        condition: service_healthy
+      postgres_00: { condition: service_started }
+      postgres_01: { condition: service_started }
+      postgres_02: { condition: service_started }
+      postgres_03: { condition: service_started }
     environment:
-      - SPRING_DATASOURCE_URL= ${DATASOURCE_URL}
-      - SPRING_DATASOURCE_USERNAME=${DB_USER}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_00:5432/db_master
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+      - MAPPING_FILE=/app/mapping.json
       - SPRING_JACKSON_PROPERTY_NAMING_STRATEGY=SNAKE_CASE
+    volumes:
+      - ./mapping.json:/app/mapping.json:ro
 
 volumes:
-  postgres_data:
-  postgres_replica_data:
+  pg_data_00:
+  pg_data_01:
+  pg_data_02:
+  pg_data_03:
